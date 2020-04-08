@@ -75,7 +75,7 @@ type SysUserB struct {
 	Params    string `gorm:"column:params" json:"params"`
 	Status    string `gorm:"column:status" json:"status"`
 	DataScope string `gorm:"-" json:"dataScope"`
-	IsDel     string `gorm:"column:is_del" json:"isDel"`
+	IsDel     int `gorm:"column:is_del" json:"isDel"`
 }
 
 type SysUser struct {
@@ -106,8 +106,8 @@ type SysUserView struct {
 // 获取用户数据
 func (e *SysUser) Get() (SysUserView SysUserView, err error) {
 
-	table := orm.Eloquent.Table("sys_user").Select([]string{"sys_user.*", "sys_role.name"})
-	table = table.Joins("left join sys_role on sys_user.role_id=sys_role.id")
+	table := orm.Eloquent.Table("sys_user").Select([]string{"sys_user.*", "sys_role.role_name"})
+	table = table.Joins("left join sys_role on sys_user.role_id=sys_role.role_id")
 	if e.Id != 0 {
 		table = table.Where("user_id = ?", e.Id)
 	}
@@ -142,14 +142,14 @@ func (e *SysUser) GetPage(pageSize int, pageIndex int) ([]SysUserPage, int32, er
 	var doc []SysUserPage
 
 	table := orm.Eloquent.Select("sys_user.*,sys_dept.dept_name").Table("sys_user")
-	table = table.Joins("left join sys_dept on sys_dept.deptId = sys_user.dept_id")
+	table = table.Joins("left join sys_dept on sys_dept.dept_id = sys_user.dept_id")
 
 	if e.Username != "" {
 		table = table.Where("username = ?", e.Username)
 	}
 
 	if e.DeptId != 0 {
-		table = table.Where("dept_id in (select deptId from sys_dept where dept_path like ? )", "%"+utils.Int64ToString(e.DeptId)+"%")
+		table = table.Where("sys_user.dept_id in (select dept_id from sys_dept where dept_path like ? )", "%"+utils.Int64ToString(e.DeptId)+"%")
 	}
 
 	// 数据权限控制
